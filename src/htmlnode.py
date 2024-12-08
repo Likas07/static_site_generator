@@ -34,17 +34,36 @@ class LeafNode(HTMLNode):
         else:
                 return f'<{self.tag}>{self.value}</{self.tag}>'
 
-class ParentNode(HTMLNode):
 
-    def __init__(self, tag, children, props = None):
-        super().__init__(tag, children, props)
+class ParentNode(HTMLNode):
+    def __init__(self, tag, children, props=None):
+        if tag is None or tag == "":
+            raise ValueError("Tag cannot be empty")
+        if children is None:
+            raise ValueError("Children cannot be empty")
+
+        # Convert children to list if provided
+        children = list(children) if children is not None else []
+
+        super().__init__(tag, None, children, props)
+
+    def props_to_html(self):
+        """Override parent's props_to_html to add space before each prop"""
+        if self.props is None:
+            return ""
+        return "".join([f' {key}="{value}"' for key, value in self.props.items()])
 
     def to_html(self):
         if self.tag is None or self.tag == "":
             raise ValueError("Tag cannot be empty")
-        if self.children is None or self.children == []:
+        if not self.children:  # Handles both None and empty list
             raise ValueError("Children cannot be empty")
+
+        # Validate children types
         for child in self.children:
             if not isinstance(child, HTMLNode):
                 raise ValueError("Children must be of type HTMLNode")
-        return f'<{self.tag}{self.props_to_html()}>{"".join([child.to_html() for child in self.children])}</{self.tag}>'
+
+        # Generate HTML
+        children_html = "".join(child.to_html() for child in self.children)
+        return f'<{self.tag}{self.props_to_html()}>{children_html}</{self.tag}>'
